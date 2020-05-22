@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class ImportFilesAsyncTask extends AsyncTask<Void, Integer, Void> {
 
@@ -75,6 +76,9 @@ public class ImportFilesAsyncTask extends AsyncTask<Void, Integer, Void> {
 		if(myActivity == null){
 			return null;
 		}
+
+		sortUris(myActivity);
+
 		int index = 0;
 		for (Uri uri : uris) {
 			try {
@@ -169,6 +173,43 @@ public class ImportFilesAsyncTask extends AsyncTask<Void, Integer, Void> {
 		}
 
 		return null;
+	}
+
+	private void sortUris(AppCompatActivity activity){
+		Collections.sort(uris, (uri1, uri2) -> {
+
+			String date1 = FileManager.getDateFromUri(activity, uri1);
+			String date2 = FileManager.getDateFromUri(activity, uri2);
+
+			if(date1 == null || date2 == null){
+				return 0;
+			}
+
+			Long date1L = Long.getLong(date1);
+			Long date2L = Long.getLong(date2);
+
+			if(date1L == null || date2L == null){
+				return 0;
+			}
+
+			return date1L.compareTo(date2L);
+		});
+	}
+
+	private long getDateAddedFromUri(AppCompatActivity activity, Uri uri){
+		String[] projection = {MediaStore.MediaColumns.DATE_MODIFIED};
+		Cursor metaCursor = activity.getContentResolver().query(uri, projection, null, null, null);
+		if (metaCursor != null) {
+			try {
+				if (metaCursor.moveToFirst()) {
+					int displayNameIndex = metaCursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED);
+					return metaCursor.getLong(displayNameIndex);
+				}
+			} finally {
+				metaCursor.close();
+			}
+		}
+		return 0;
 	}
 
 	private Bitmap getVideoThumbnail(Context context, Uri uri) throws IllegalArgumentException,

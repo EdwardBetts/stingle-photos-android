@@ -309,14 +309,19 @@ public class Helpers {
 		return null;
 	}
 	
-	public static String getRealPathFromURI(Activity activity, Uri contentUri) {
+	public static String getRealPathFromURI(Context context, Uri contentUri) {
         String[] proj = { MediaStore.Images.Media.DATA };
-        Cursor cursor = activity.getContentResolver().query(contentUri, proj, null, null, null);
-        if(cursor != null){
-	        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-	        cursor.moveToFirst();
-	        return cursor.getString(column_index);
-        }
+		Cursor cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
+		try {
+			if (cursor != null) {
+				int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+				cursor.moveToFirst();
+				return cursor.getString(column_index);
+			}
+		}finally {
+			assert cursor != null;
+			cursor.close();
+		}
         
         return null;
     }
